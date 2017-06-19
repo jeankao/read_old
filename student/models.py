@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from teacher.models import Classroom
+from django.utils import timezone
 
 # 學生選課資料
 class Enroll(models.Model):
@@ -32,3 +33,29 @@ class Enroll(models.Model):
 class EnrollGroup(models.Model):
     name = models.CharField(max_length=30)
     classroom_id = models.IntegerField(default=0)
+		
+#作業
+class SWork(models.Model):
+    student_id = models.IntegerField(default=0)
+    index = models.IntegerField()
+    youtube = models.CharField(max_length=100)	
+    memo = models.TextField(default='')
+    publication_date = models.DateTimeField(default=timezone.now)
+    score = models.IntegerField(default=-1)
+    scorer = models.IntegerField(default=0)
+		
+    def __unicode__(self):
+        user = User.objects.filter(id=self.student_id)[0]
+        index = self.index
+        return user.first_name+"("+str(index)+")"		
+			
+# 小老師        
+class Assistant(models.Model):
+    student_id = models.IntegerField(default=0)
+    classroom_id = models.IntegerField(default=0)
+    lesson = models.IntegerField(default=0)
+    
+    @property        
+    def student(self):
+        return User.objects.get(id=self.student_id)   
+			

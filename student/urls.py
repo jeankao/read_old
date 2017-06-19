@@ -2,6 +2,8 @@
 from django.conf.urls import url
 from . import views
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
+from student.views import WorkListView
 
 urlpatterns = [
     # 選課
@@ -13,4 +15,10 @@ urlpatterns = [
     url(r'^classmate/(?P<classroom_id>\d+)/$', views.classmate), 
     url(r'^loginlog/(?P<user_id>\d+)/$', views.LoginLogListView.as_view()),    
     #url(r'^calendar/(?P<classroom_id>\d+)/$', views.LoginCalendarClassView.as_view()),     	
+    #作業
+    url(r'^work/(?P<classroom_id>\d+)/$', login_required(WorkListView.as_view()), name='work-list'),  
+    url(r'^work/submit/(?P<index>\d+)/$', views.submit),    
+    url(r'^work/show/(?P<index>\d+)/$', views.show),      
+    url(r'^work/memo/(?P<classroom_id>\d+)/(?P<index>\d+)/$', views.memo), 
+	  url(r'^work/rank/(?P<index>\d+)/$', views.rank), 	
 ]

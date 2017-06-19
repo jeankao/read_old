@@ -35,3 +35,7 @@ class SeatForm(forms.ModelForm):
         class Meta:
             model = Enroll
             fields = ['seat']
+          
+class SubmitForm(forms.Form):
+        youtube = forms.CharField()
+        memo = forms.CharField(widget=forms.Textarea)
