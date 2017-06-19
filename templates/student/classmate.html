@@ -13,7 +13,7 @@
             <td>最新登入</td>
             <td>登入次數</td>            
         </tr>
-        {% for enroll, group_name, login_times in enroll_group %}
+        {% for enroll, login_times in enrolls %}
             <tr>
 			<td>
 			{{enroll.student.last_name}}<BR>
@@ -30,7 +30,7 @@
             <td>{{enroll.student.first_name}}</td>
             <td>{{group_name}}</td>
             <td>{{enroll.student.last_login}}</td>
-            <td><a href="/student/loginlog/{{enroll.student_id}}">{{login_times}}</a></td>
+						<td>{% if login_times > 0 %}<a href="/student/loginlog/{{enroll.student_id}}">{{login_times}}</a>{% else %} 0 {% endif %}</td>
 					</tr>
         {% endfor %}
         </table>

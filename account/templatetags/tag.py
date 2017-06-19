@@ -3,6 +3,7 @@ from django import template
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Group 
 from teacher.models import Classroom
+from django.contrib.auth.models import User
 
 register = template.Library() 
 
@@ -21,3 +22,11 @@ def teacher_id(classroom_id):
         return teacher_id
     else : 
         return 0
+      
+@register.filter()
+def name(user_id):
+    if user_id > 0 :
+        user = User.objects.get(id=user_id)
+        return user.first_name
+    else : 
+        return "匿名"

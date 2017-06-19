@@ -11,6 +11,6 @@ urlpatterns = [
 		url(r'^classroom/seat/(?P<enroll_id>\d+)/(?P<classroom_id>\d+)/$', views.seat_edit, name='seat_edit'),
     # 同學
     url(r'^classmate/(?P<classroom_id>\d+)/$', views.classmate), 
-    #url(r'^loginlog/(?P<user_id>\d+)/$', views.LoginLogListView.as_view()),    
+    url(r'^loginlog/(?P<user_id>\d+)/$', views.LoginLogListView.as_view()),    
     #url(r'^calendar/(?P<classroom_id>\d+)/$', views.LoginCalendarClassView.as_view()),     	
 ]

@@ -15,5 +15,16 @@ urlpatterns = [
         #列出所有帳號
         url(r'^userlist/$', views.UserListView.as_view()),
         #設定教師
-        url(r'^teacher/make/(?P<action>\d+)/(?P<user_id>\d+)$', views.make),   
+        url(r'^teacher/make/(?P<action>\d+)/(?P<user_id>\d+)$', views.make), 
+        #修改密碼
+        url(r'^password-change/$', auth_views.password_change, name='password_change'),
+        url(r'^password-change/done/$', auth_views.password_change_done, name='password_change_done'),    
+        url(r'^password/(?P<user_id>\d+)/$', views.password),
+        #修改真實姓名
+        url(r'^realname/(?P<user_id>\d+)/$', views.adminrealname),    
+        url(r'^realname/$', views.realname, name='realname'), 
+        #修改學校
+        url(r'^school/$', views.adminschool),     
+        #修改信箱
+        url(r'^email/$', views.adminemail),      
 ]
