@@ -1,5 +1,4 @@
-{% load tag %}
-<!DOCTYPE html>
+{% load tag %}<!DOCTYPE html>
 <!--
 Template Name: Jovaphile
 Author: <a href="http://www.os-templates.com/">OS Templates</a>
@@ -7,14 +6,18 @@ Author URI: http://www.os-templates.com/
 Licence: Free to use under our free template licence terms
 Licence URI: http://www.os-templates.com/template-terms
 -->
-<html lang="">
+<html lang="zh-TW">
 <!-- To declare your language - read more here: https://www.w3.org/International/questions/qa-html-language-declarations -->
 <head>
 <title>臺北市立南港高中</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link href="/static/css/layout.css" rel="stylesheet" type="text/css" media="all">
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<!-- Latest compiled and minified JavaScript -->
 </head>
 <body id="top">
 <!-- ################################################################################################ -->
@@ -81,6 +84,7 @@ Licence URI: http://www.os-templates.com/template-terms
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/jquery.backtotop.js"></script>
 <script src="/static/js/jquery.mobilemenu.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>	
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	{% block footer_script %}{% endblock %}
 	</body>
 </html>

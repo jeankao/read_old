@@ -8,6 +8,7 @@ from teacher.models import Classroom, TWork, FWork, FContent
 from account.models import VisitorLog
 from student.forms import EnrollForm, GroupForm, SeatForm, GroupSizeForm, SubmitForm, ForumSubmitForm
 from django.core.exceptions import ObjectDoesNotExist
+import json
 
 # 列出選修的班級
 class ClassroomListView(ListView):
@@ -245,11 +246,15 @@ def forum_submit(request, index):
         return render_to_response('student/forum_form.html', {'form':form, 'scores':scores, 'index':index, 'contents':contents}, context_instance=RequestContext(request))
 
 def forum_show(request, index):
-    work = []
-    contents = FContent.objects.filter(forum_id=index).order_by("-id")
-    try:
-        work = SFWork.objects.get(index=index, student_id=request.user.id)
-    except ObjectDoesNotExist:
-        pass    
-    return render_to_response('student/forum_show.html', {'work':work, 'contents':contents}, context_instance=RequestContext(request))
+		work = []
+		materials = {}
+		contents = FContent.objects.filter(forum_id=index).order_by("-id")
+		try:
+				work = SFWork.objects.get(index=index, student_id=request.user.id)
+				memos = json.loads(work.memo)
+				for f in contents:
+						materials[f.id] = f
+		except ObjectDoesNotExist:
+				pass    
+		return render_to_response('student/forum_show.html', {'work':work, 'contents':contents, 'memo':memos, 'materials': materials}, context_instance=RequestContext(request))
 
