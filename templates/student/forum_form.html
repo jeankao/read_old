@@ -64,24 +64,11 @@ $(document).ready(function () {
 
 $('#forum_form').submit(function(se) {
   var memo = [];
-  var verified = true;
   $('.comment-body').each(function(index, element) {
     var cid = parseInt($(element).parent().parent().attr('id').substr(1));
     element.value = element.value.trim();
-    if (element.value === "") {
-      verified = false;
-      $(element).parent().addClass('has-error');
-      $(element).focus();
-    }
-    else {
-      $(element).parent().removeClass('has-error');
-      memo.push({id: cid, comment: element.value});
-    }
+    memo.push({id: cid, comment: element.value});
   });
-  if (!verified) {
-    alert('還有心得沒有寫噢！！');
-    return false;
-  }
   $('#memo').val(JSON.stringify(memo));
 });
 </script>

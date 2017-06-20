@@ -31,7 +31,6 @@
 var json_str = `{% autoescape off %}{{ work.memo }}{% endautoescape %}`.replace(/\n/g, '<br/>').replace(/\r/g, '').replace(/\t/g, '');
 var comments = JSON.parse(json_str);
 for (obj of comments) {
-  console.log(obj.id);
   $('#c'+obj.id+'_body').html(obj.comment);
 }
 </script>
