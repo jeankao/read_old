@@ -5,10 +5,13 @@
             分數：{{ work.score}} / 
             評分者：{{ work.scorer }}
             尚未評分 <BR>     
-              <font color=black>心得感想：</font><BR> 
-  {% for work in contents %}
-  <div class="material_wrapper panel panel-default" id="c{{work.id}}">
-    <div class="material panel-heading">
+  <ul class="list-group">
+    <li class="list-group-item">
+      <h4 class="list-group-item-heading">心得感想</h4>
+      <div class="list-group-item-text">{{ work.memo|safe }}</div>
+    </li>
+    {% for work in contents %}
+    <li class="list-group-item material" id="m_{{ work.id }}">
       {% spaceless %}
         {% if work.content_type == 1 %}
         <a href="{{work.content_link}}" target="_blank">{% if work.content_title %}{{work.content_title}}{% else %}開啟連結{% endif %}</a>
@@ -18,20 +21,7 @@
         <a href="/teacher/forum/download/{{work.id}}" target="_blank">{{work.content_title}}</a> 
         {% endif %} 
       {% endspaceless %}
-    </div>
-    <div class="comment_wrapper panel-body">
-      <div class="comment-body" id="c{{work.id}}_body"></div>
-    </div>
-  </div>
-  {% endfor %}
-{% endblock %}
-
-{% block footer_script %}
-<script>
-var json_str = `{% autoescape off %}{{ work.memo }}{% endautoescape %}`.replace(/\n/g, '<br/>').replace(/\r/g, '').replace(/\t/g, '');
-var comments = JSON.parse(json_str);
-for (obj of comments) {
-  $('#c'+obj.id+'_body').html(obj.comment);
-}
-</script>
+    </li>
+    {% endfor %}
+  </ul>
 {% endblock %}

@@ -3,10 +3,16 @@
 {% block content %}
 <form action="" enctype="multipart/form-data" id="forum_form" method="post">
   {% csrf_token %}
-  <textarea name="memo" id="memo" cols="30" rows="10" style="display: none"></textarea>
-  {% for work in contents %}
-  <div class="material_wrapper panel panel-default" id="c{{work.id}}">
-    <div class="material panel-heading">
+  <ul class="list-group">
+    <li class="list-group-item">
+      <h4 class="list-group-item-heading">心得</h4>
+      <div class="list-group-item-text">
+        <textarea name="memo" id="memo" cols="30" rows="10" class="form-control list-group-item-text"></textarea>
+        <input class="button button-default" type="submit" value="送出">
+      </div>      
+    </li>
+    {% for work in contents %}
+    <li class="list-group-item material" id="m_{{ work.id }}">
       {% spaceless %}
         {% if work.content_type == 1 %}
         <a href="{{work.content_link}}" target="_blank">{% if work.content_title %}{{work.content_title}}{% else %}開啟連結{% endif %}</a>
@@ -16,16 +22,12 @@
         <a href="/teacher/forum/download/{{work.id}}" target="_blank">{{work.content_title}}</a> 
         {% endif %} 
       {% endspaceless %}
-    </div>
-    <div class="comment_wrapper panel-body">
       {% if work.content_type == 2 %}{% spaceless %}
-      <div class="comment_tool"><button type="button" class="btn btn-primary btn-xs btn-add-marker">＋新增時間標記</button></div>
+        <button type="button" class="btn btn-primary btn-xs btn-add-marker">＋新增時間標記</button>
       {% endspaceless %}{% endif %}
-      <textarea class="comment-body form-control" name="c_{{work.id}}" id="c{{work.id}}_body" cols="30" rows="10"></textarea>
-    </div>
-  </div>
-  {% endfor %}
-  <input class="button button-default" type="submit" value="送出">
+    </li>
+    {% endfor %}
+  </ul> 
 </form>
 {% endblock %}
 
@@ -37,16 +39,17 @@ function secToTime(sec) {
 
 function onYouTubeIframeAPIReady() {
   $('.material iframe[src*="www.youtube.com"]').each(function(index, element) {
-      var playerID = $(element).parent().parent().attr('id')+'_player';
+      var materialID = $(element).parent().attr('id');
+      var playerID = `${materialID}_player`;
       var player;
       $(element).attr('id', playerID);
       player = new YT.Player(playerID);
-      $(".btn-add-marker", $(element).parent().parent()).click(function(e) {
-        var commentID = '#'+$(element).parent().parent().attr('id')+'_body';
+      $(".btn-add-marker", $(element).parent()).click(function(e) {
+        var commentID = '#memo';
         var comment_body = $(commentID).val();
         if (comment_body)
           comment_body += "\n";
-        comment_body += "["+secToTime(player.getCurrentTime().toFixed())+"]";
+        comment_body += "["+materialID+"#"+secToTime(player.getCurrentTime().toFixed())+"]";
         $(commentID).val(comment_body).focus();
       });
   });
@@ -61,7 +64,7 @@ $(document).ready(function () {
   var firstScriptTag = document.getElementsByTagName('script')[0];
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);  
 });
-
+/*
 $('#forum_form').submit(function(se) {
   var memo = [];
   $('.comment-body').each(function(index, element) {
@@ -71,5 +74,6 @@ $('#forum_form').submit(function(se) {
   });
   $('#memo').val(JSON.stringify(memo));
 });
+*/
 </script>
 {% endblock %}
