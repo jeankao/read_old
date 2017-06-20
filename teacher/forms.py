@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django import forms
-from teacher.models import Classroom, TWork
+from teacher.models import Classroom, TWork, FWork, FContent
 from student.models import SWork
 
 # 新增一個課程表單
@@ -55,3 +55,27 @@ Check_CHOICES = (
     (20, "20分"),
     (0, "0分"),			
 )		
+
+# 新增一個作業
+class ForumForm(forms.ModelForm):
+        class Meta:
+           model = FWork
+           fields = ['title']
+        
+        def __init__(self, *args, **kwargs):
+            super(ForumForm, self).__init__(*args, **kwargs)
+            self.fields['title'].label = "作業名稱"
+						
+# 新增一個作業
+class ForumContentForm(forms.ModelForm):
+        class Meta:
+           model = FContent
+           fields = ['forum_id', 'content_type', 'content_title', 'content_link', 'content_youtube', 'content_file']
+        
+        def __init__(self, *args, **kwargs):
+            super(ForumContentForm, self).__init__(*args, **kwargs)
+            self.fields['forum_id'].required = False		
+            self.fields['content_title'].required = False						
+            self.fields['content_link'].required = False
+            self.fields['content_youtube'].required = False
+            self.fields['content_file'].required = False

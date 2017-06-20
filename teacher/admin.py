@@ -1,3 +1,4 @@
 from django.contrib import admin
+from teacher.models import FContent
 
-# Register your models here.
+admin.site.register(FContent)

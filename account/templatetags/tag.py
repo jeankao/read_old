@@ -30,3 +30,9 @@ def name(user_id):
         return user.first_name
     else : 
         return "匿名"
+      
+@register.filter()
+def number(youtube):
+    number_pos = youtube.find("v=")
+    number = youtube[number_pos+2:number_pos+13]
+    return number

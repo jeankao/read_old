@@ -58,4 +58,17 @@ class Assistant(models.Model):
     @property        
     def student(self):
         return User.objects.get(id=self.student_id)   
-			
+
+#作業
+class SFWork(models.Model):
+    student_id = models.IntegerField(default=0)
+    index = models.IntegerField()
+    memo = models.TextField(default='')
+    publication_date = models.DateTimeField(default=timezone.now)
+    score = models.IntegerField(default=-1)
+    scorer = models.IntegerField(default=0)
+		
+    def __unicode__(self):
+        user = User.objects.filter(id=self.student_id)[0]
+        index = self.index
+        return user.first_name+"("+str(index)+")"		

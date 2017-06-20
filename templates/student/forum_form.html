@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load tag %}
+{% block content %}
+         <form action="" enctype="multipart/form-data"  method="post">
+            <table>
+                {{ form.as_table }}
+            </table>
+            {% csrf_token %}
+            <input type="submit" value="送出">
+        </form>
+<BR><BR>
+        <table>
+        {% for work in contents %}
+              <tr><td>
+              {% if work.content_type == 1 %}
+
+              <a href="{{work.content_link}}" target="_blank">{% if work.content_title %}{{work.content_title}}{% else %}開啟連結{% endif %}</a>
+                
+              {% endif %}
+              {% if work.content_type == 2 %}
+              
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/{{work.content_youtube|number}}" frameborder="0" allowfullscreen></iframe>
+                            
+              {% endif %}
+              {% if work.content_type == 3 %}
+              <a href="/teacher/forum/download/{{work.id}}" target="_blank">{{work.content_title}}</a> 
+                                            
+              {% endif %}              
+                </td></tr>
+        {% endfor %}
+        </table>
+
+{% endblock %}

@@ -3,11 +3,16 @@ from django.shortcuts import render
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.views.generic import ListView, DetailView, CreateView
-from teacher.models import Classroom, TWork
+from teacher.models import Classroom, TWork, FWork, FContent
 from student.models import Enroll, EnrollGroup, SWork, Assistant
-from .forms import ClassroomForm, WorkForm
+from .forms import ClassroomForm, WorkForm, ForumForm, ForumContentForm
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.core.files.storage import FileSystemStorage
+import os
+from uuid import uuid4
+from django.conf import settings
+from wsgiref.util import FileWrapper
+from django.http import HttpResponse
 # 判斷是否為授課教師
 def is_teacher(user, classroom_id):
     return user.groups.filter(name='teacher').exists() and Classroom.objects.filter(teacher_id=user.id, id=classroom_id).exists()
@@ -145,108 +150,130 @@ def work_class(request, classroom_id, work_id):
         
     return render_to_response('teacher/twork_class.html',{'classmate_work': classmate_work, 'classroom_id':classroom_id, 'index': work_id}, context_instance=RequestContext(request))
 	
-	# 教師評分
-def scoring(request, classroom_id, user_id, index):
-    user = User.objects.get(id=user_id)
-    enroll = Enroll.objects.get(classroom_id=classroom_id, student_id=user_id)
-    try:
-        assistant = Assistant.objects.filter(classroom_id=classroom_id,lesson=index,student_id=request.user.id)
-    except ObjectDoesNotExist:            
-        if not is_teacher(request.user, classroom_id):
-            return render_to_response('message.html', {'message':"您沒有權限"}, context_instance=RequestContext(request))
+# 列出所有課程
+class ForumListView(ListView):
+    model = FWork
+    context_object_name = 'works'
+    template_name = "teacher/forum_list.html"		
+    paginate_by = 20
+    def get_queryset(self):
+        queryset = FWork.objects.filter(teacher_id=self.request.user.id, classroom_id=self.kwargs['classroom_id']).order_by("-id")
+        return queryset
+			
+    def get_context_data(self, **kwargs):
+        context = super(ForumListView, self).get_context_data(**kwargs)
+        context['classroom_id'] = self.kwargs['classroom_id']	
+        return context	
         
-    try:
-        work3 = SWork.objects.get(student_id=user_id, index=index)
-    except ObjectDoesNotExist:
-        work3 = SWork(index=index, student_id=user_id)
-        
-    if request.method == 'POST':
-        form = ScoreForm(request.user, request.POST)
-        if form.is_valid():
-            work = SWork.objects.filter(index=index, student_id=user_id)
-            if not work.exists():
-                work = SWork(index=index, student_id=user_id, score=form.cleaned_data['score'], publication_date=timezone.now())
-                work.save()
-                  
-            else:
-                if work[0].score < 0 :   
-                    # 小老師
-                    if not is_teacher(request.user, classroom_id):
-    	                # credit
-                        update_avatar(request.user.id, 2, 1)
-                        # History
-                        history = PointHistory(user_id=request.user.id, kind=2, message='1分--小老師:<'+index.encode('utf-8')+'><'+enroll.student.first_name.encode('utf-8')+'>', url=request.get_full_path())
-                        history.save()				
-    
-				    # credit
-                    update_avatar(enroll.student_id, 1, 1)
-                    # History
-                    history = PointHistory(user_id=user_id, kind=1, message='1分--作業受評<'+index.encode('utf-8')+'><'+request.user.first_name.encode('utf-8')+'>', url=request.get_full_path())
-                    history.save()		                        
-                
-                work.update(score=form.cleaned_data['score'])
-                work.update(scorer=request.user.id)
-                # 記錄系統事件
-                if is_event_open(request) :                   
-                    log = Log(user_id=request.user.id, event=u'更新評分<'+user.first_name+u'><'+str(work[0].score)+u'分>')
-                    log.save()                    
-						
-            if is_teacher(request.user, classroom_id):         
-                if form.cleaned_data['assistant']:
-                    try :
-					    assistant = Assistant.objects.get(student_id=user_id, classroom_id=classroom_id, lesson=index)
-                    except ObjectDoesNotExist:
-                        assistant = Assistant(student_id=user_id, classroom_id=classroom_id, lesson=index)
-                        assistant.save()	
-                        
-                    # create Message
-                    title = "<" + assistant.student.first_name.encode("utf-8") + u">擔任小老師<".encode("utf-8") + index.encode('utf-8') + ">"
-                    url = "/teacher/score_peer/" + str(index) + "/" + classroom_id + "/" + str(enroll.group) 
-                    message = Message.create(title=title, url=url, time=timezone.now())
-                    message.save()                        
-                    
-                    group = Enroll.objects.get(classroom_id=classroom_id, student_id=assistant.student_id).group
-                    if group > 0 :
-                        enrolls = Enroll.objects.filter(group = group)
-                        for enroll in enrolls:
-                            # message for group member
-                            messagepoll = MessagePoll.create(message_id = message.id,reader_id=enroll.student_id)
-                            messagepoll.save()
-                    
-                return redirect('/teacher/work/class/'+classroom_id+'/'+index)
-            else: 
-                return redirect('/teacher/score_peer/'+index+'/'+classroom_id+'/'+str(enroll.group))
-
-    else:
-        work = SWork.objects.filter(index=index, student_id=user_id)
-        if not work.exists():
-            form = ScoreForm(user=request.user)
-        else:
-            form = ScoreForm(instance=work[0], user=request.user)
-    return render_to_response('teacher/scoring.html', {'form': form,'work':work3, 'student':user, 'classroom_id':classroom_id}, context_instance=RequestContext(request))
-
-# 小老師評分名單
-def score_peer(request, index, classroom_id, group):
-    try:
-        assistant = Assistant.objects.get(lesson=index, classroom_id=classroom_id, student_id=request.user.id)
-    except ObjectDoesNotExist:
-        return redirect("/student/group/work/"+index+"/"+classroom_id)
-
-    enrolls = Enroll.objects.filter(classroom_id=classroom_id, group=group)
-    lesson = ""
-    classmate_work = []
-    for enroll in enrolls:
-        if not enroll.student_id == request.user.id : 
-            scorer_name = ""
-            try:    
-                work = Work.objects.get(user_id=enroll.student.id, index=index)
-                if work.scorer > 0 :
-                    scorer = User.objects.get(id=work.scorer)
-                    scorer_name = scorer.first_name
-            except ObjectDoesNotExist:
-                work = Work(index=index, user_id=1, number="0")        
-            classmate_work.append([enroll.student,work,1, scorer_name])
-        lesson = lesson_list[int(index)-1]
-   
-    return render_to_response('teacher/score_peer.html',{'enrolls':enrolls, 'classmate_work': classmate_work, 'classroom_id':classroom_id, 'lesson':lesson, 'index': index}, context_instance=RequestContext(request))
+#新增一個課程
+class ForumCreateView(CreateView):
+    model = FWork
+    form_class = ForumForm
+    template_name = "form.html"
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.teacher_id = self.request.user.id
+        self.object.classroom_id = self.kwargs['classroom_id']
+        self.object.save()  
   
+        return redirect("/teacher/forum/"+self.kwargs['classroom_id'])        
+            			
+# 列出某作業所有同學名單
+def forum_class(request, classroom_id, work_id):
+    enrolls = Enroll.objects.filter(classroom_id=classroom_id)
+    classroom_name = Classroom.objects.get(id=classroom_id).name
+    classmate_work = []
+    scorer_name = ""
+    for enroll in enrolls:
+        try:    
+            work = SWork.objects.get(student_id=enroll.student_id, index=work_id)
+            if work.scorer > 0 :
+                scorer = User.objects.get(id=work.scorer)
+                scorer_name = scorer.first_name
+            else :
+                scorer_name = "1"
+        except ObjectDoesNotExist:
+            work = SWork(index=work_id, student_id=1)
+        try:
+            group_name = EnrollGroup.objects.get(id=enroll.group).name
+        except ObjectDoesNotExist:
+            group_name = "沒有組別"
+        assistant = Assistant.objects.filter(classroom_id=classroom_id, student_id=enroll.student_id, lesson=work_id)
+        if assistant.exists():
+            classmate_work.append([enroll,work,1, scorer_name, group_name])
+        else :
+            classmate_work.append([enroll,work,0, scorer_name, group_name])   
+    def getKey(custom):
+        return custom[0].seat
+	
+    classmate_work = sorted(classmate_work, key=getKey)
+    
+        
+    return render_to_response('teacher/twork_class.html',{'classmate_work': classmate_work, 'classroom_id':classroom_id, 'index': work_id}, context_instance=RequestContext(request))
+
+# 列出所有課程
+class ForumContentListView(ListView):
+    model = FContent
+    context_object_name = 'contents'
+    template_name = "teacher/forum_content.html"		
+    paginate_by = 20
+    def get_queryset(self):
+        queryset = FContent.objects.filter(forum_id=self.kwargs['forum_id']).order_by("-id")
+        return queryset
+			
+    def get_context_data(self, **kwargs):
+        context = super(ForumContentListView, self).get_context_data(**kwargs)
+        context['forum_id'] = self.kwargs['forum_id']
+        return context	
+			
+#新增一個課程
+class ForumContentCreateView(CreateView):
+    model = FContent
+    form_class = ForumContentForm
+    template_name = "teacher/forum_form.html"
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        work = FContent(forum_id=self.object.forum_id)
+        if self.object.content_type == 1:
+            work.content_type = 1
+            work.content_title = self.object.content_title
+            work.content_link = self.object.content_link
+        if self.object.content_type  == 2:
+            work.content_type = 2					
+            work.content_youtube = self.object.content_youtube
+        if self.object.content_type  == 3:
+            work.content_type = 3
+            myfile = self.request.FILES['content_file']
+            fs = FileSystemStorage()
+            filename = uuid4().hex
+            work.content_title = myfile.name
+            work.content_filename = filename
+            fs.save("static/upload/"+filename, myfile)	
+        work.save()         
+  
+        return redirect("/teacher/forum/content/"+self.kwargs['forum_id'])  
+
+    def get_context_data(self, **kwargs):
+        ctx = super(ForumContentCreateView, self).get_context_data(**kwargs)
+        ctx['forum_id'] = self.kwargs['forum_id']
+        return ctx
+
+def forum_delete(request, forum_id, content_id):
+    instance = FContent.objects.get(id=content_id)
+    instance.delete()
+
+    return redirect("/teacher/forum/content/"+forum_id)  
+		
+	
+def forum_download(request, content_id):
+    content = FContent.objects.get(id=content_id)
+    filename = content.content_title
+    download =  settings.BASE_DIR + "/static/upload/" + content.content_filename
+    wrapper = FileWrapper(file( download, "r" ))
+    response = HttpResponse(wrapper, content_type = 'application/force-download')
+    #response = HttpResponse(content_type='application/force-download')
+    response['Content-Disposition'] = 'attachment; filename={0}'.format(filename.encode('utf8'))
+    # It's usually a good idea to set the 'Content-Length' header too.
+    # You can also set any other required headers: Cache-Control, etc.
+    return response
+    #return render_to_response('student/download.html', {'download':download})

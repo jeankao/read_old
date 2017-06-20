@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %} Teachers {% endblock %}
+{% block content %}
+        <a href="/teacher/forum/add/{{classroom_id}}">新增討論</a><BR><BR>
+        <table>
+            <tr>
+                <td>名稱</td>
+                <td>時間</td>				
+                <td colspan=3>功能</td>
+        {% for work in works %}
+            <tr>
+            <td>{{work.title}}</td>
+			<td>{{work.time}}</td>
+            <td><a href="/teacher/forum/content/{{work.id}}">素材</a></td>              
+            <td><a href="/teacher/forum/class/{{classroom_id}}/{{work.id}}">評分</a></td>
+            <td><a href="/student/forum/memo/{{classroom_id}}/{{work.id}}">心得</a></td>			
+            </tr>
+        {% endfor %}
+        </table>
+{% endblock %}

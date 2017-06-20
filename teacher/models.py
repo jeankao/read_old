@@ -23,9 +23,25 @@ class Classroom(models.Model):
     def __unicode__(self):
         return self.name
       
-#作業
+#搜查線
 class TWork(models.Model):
     title = models.CharField(max_length=250)
     teacher_id = models.IntegerField(default=0)		
     classroom_id = models.IntegerField(default=0)
-    time = models.DateTimeField(default=timezone.now)      
+    time = models.DateTimeField(default=timezone.now)    
+    
+#討論區
+class FWork(models.Model):
+    title = models.CharField(max_length=250)
+    teacher_id = models.IntegerField(default=0)		
+    classroom_id = models.IntegerField(default=0)
+    time = models.DateTimeField(default=timezone.now)    
+
+class FContent(models.Model):
+    forum_id =  models.IntegerField(default=0)
+    content_type = models.IntegerField(default=0)
+    content_title = models.CharField(max_length=250,null=True,blank=True)     
+    content_link = models.CharField(max_length=250,null=True,blank=True) 
+    content_youtube = models.CharField(max_length=250,null=True,blank=True) 
+    content_file = models.FileField(blank=True,null=True)
+    content_filename = models.CharField(max_length=20,null=True,blank=True)     

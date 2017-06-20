@@ -3,10 +3,10 @@ from django.shortcuts import render
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.views.generic import ListView, CreateView
-from student.models import Enroll, EnrollGroup, SWork
-from teacher.models import Classroom, TWork
+from student.models import Enroll, EnrollGroup, SWork, SFWork
+from teacher.models import Classroom, TWork, FWork, FContent
 from account.models import VisitorLog
-from student.forms import EnrollForm, GroupForm, SeatForm, GroupSizeForm, SubmitForm
+from student.forms import EnrollForm, GroupForm, SeatForm, GroupSizeForm, SubmitForm, ForumSubmitForm
 from django.core.exceptions import ObjectDoesNotExist
 
 # 列出選修的班級
@@ -127,6 +127,7 @@ class WorkListView(ListView):
 			
 def submit(request, index):
         scores = []
+        works = SWork.objects.filter(index=index, student_id=request.user.id)		
         if request.method == 'POST':
             form = SubmitForm(request.POST, request.FILES)
             if form.is_valid():						
@@ -142,25 +143,26 @@ def submit(request, index):
             else:
                 return render_to_response('form.html', {'error':form.errors}, context_instance=RequestContext(request))
         else:
-            form = SubmitForm()
+            if not works.exists():
+                form = SubmitForm()
+            else:
+                form = SubmitForm(instance=works[0])
         return render_to_response('form.html', {'form':form, 'scores':scores, 'index':index}, context_instance=RequestContext(request))
 
 def show(request, index):
     work = []
     try:
         work = SWork.objects.get(index=index, student_id=request.user.id)
-        number_pos = work.youtube.find("v=")
-        number = work.youtube[number_pos+2:number_pos+13]
     except ObjectDoesNotExist:
         pass    
-    return render_to_response('student/work_show.html', {'work':work, 'number':number}, context_instance=RequestContext(request))
+    return render_to_response('student/work_show.html', {'work':work}, context_instance=RequestContext(request))
 
     
 def rank(request, index):
     works = SWork.objects.filter(index=index).order_by("id")
     return render_to_response('student/work_rank.html', {'works':works}, context_instance=RequestContext(request))
 
- # 查詢某作業所有同學心得
+# 查詢某作業所有同學心得
 def memo(request, classroom_id, index):
     enrolls = Enroll.objects.filter(classroom_id=classroom_id)
     datas = []
@@ -175,3 +177,79 @@ def memo(request, classroom_id, index):
     datas = sorted(datas, key=getKey)	
   
     return render_to_response('student/work_memo.html', {'datas': datas}, context_instance=RequestContext(request))
+	
+# 查詢某作業所有同學影片和心得
+def video(request, classroom_id, index):
+    enrolls = Enroll.objects.filter(classroom_id=classroom_id)
+    datas = []
+    for enroll in enrolls:
+        try:
+            work = SWork.objects.get(index=index, student_id=enroll.student_id)
+            datas.append([enroll.seat, enroll.student.first_name, work.memo, work.youtube])
+        except ObjectDoesNotExist:
+            datas.append([enroll.seat, enroll.student.first_name, "", ""])
+    def getKey(custom):
+        return custom[0]
+    datas = sorted(datas, key=getKey)	
+  
+    return render_to_response('student/work_video.html', {'datas': datas}, context_instance=RequestContext(request))
+	
+# 列出所有作業
+class ForumListView(ListView):
+    model = SFWork
+    context_object_name = 'works'
+    template_name = 'student/forum_list.html'    
+    paginate_by = 20
+    
+    def get_queryset(self):
+        classroom = Classroom.objects.get(id=self.kwargs['classroom_id'])
+       
+        queryset = FWork.objects.filter(classroom_id=self.kwargs['classroom_id']).order_by("-id")
+        return queryset
+        
+    def get_context_data(self, **kwargs):
+        context = super(ForumListView, self).get_context_data(**kwargs)
+        context['classroom_id'] = self.kwargs['classroom_id']
+        return context	    
+
+    # 限本班同學
+    def render_to_response(self, context):
+        try:
+            enroll = Enroll.objects.get(student_id=self.request.user.id, classroom_id=self.kwargs['classroom_id'])
+        except ObjectDoesNotExist :
+            return redirect('/')
+        return super(ForumListView, self).render_to_response(context)    
+			
+def forum_submit(request, index):
+        scores = []
+        works = SFWork.objects.filter(index=index, student_id=request.user.id)		
+        contents = FContent.objects.filter(forum_id=index).order_by("-id")
+        if request.method == 'POST':
+            form = ForumSubmitForm(request.POST, request.FILES)
+            if form.is_valid():						
+                try: 
+                    work = SFWork.objects.get(index=index, student_id=request.user.id)				
+                except ObjectDoesNotExist:
+                    work = SFWork(index=index, student_id=request.user.id)		
+                work.memo=form.cleaned_data['memo']
+                work.save()
+
+                return redirect("/student/forum/show/"+index)
+            else:
+                return render_to_response('student/forum_form.html', {'error':form.errors}, context_instance=RequestContext(request))
+        else:
+            if not works.exists():
+                form = ForumSubmitForm()
+            else:
+                form = ForumSubmitForm(instance=works[0])
+        return render_to_response('student/forum_form.html', {'form':form, 'scores':scores, 'index':index, 'contents':contents}, context_instance=RequestContext(request))
+
+def forum_show(request, index):
+    work = []
+    contents = FContent.objects.filter(forum_id=index).order_by("-id")
+    try:
+        work = SFWork.objects.get(index=index, student_id=request.user.id)
+    except ObjectDoesNotExist:
+        pass    
+    return render_to_response('student/forum_show.html', {'work':work, 'contents':contents}, context_instance=RequestContext(request))
+
