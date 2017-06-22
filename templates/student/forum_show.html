@@ -65,8 +65,7 @@ function onYouTubeIframeAPIReady() {
 }
 
 $('#vidModal').on('hidden.bs.modal', function (e) {
-  if (!vidPlayer)
-    vidPlayer.stopVideo();
+  vidPlayer.stopVideo();
 });
 
 $(document).ready(function () {
