@@ -9,7 +9,15 @@
     <div class="panel-heading">心得感想</div>
     <div class="panel-body">{{ work.memo|safe }}</div>
   </div>
-  <div id="vplayer"></div>
+  <div class="modal fade" tabindex="-1" role="dialog" id="vidModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+            <div id="vplayer"></div>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 {% endblock %}
 
 {% block footer_script %}
@@ -50,10 +58,17 @@ function onYouTubeIframeAPIReady() {
       });
     } else {
       vidPlayer.loadVideoById(vid, tsec, 'large');
-      vidPlayer.play();
+      vidPlayer.playVideo();
     }
+    $('#vidModal').modal('show');
   });
 }
+
+$('#vidModal').on('hidden.bs.modal', function (e) {
+  if (!vidPlayer)
+    vidPlayer.stopVideo();
+});
+
 $(document).ready(function () {
   //------------------------------------------------------------------------
   // Load YouTube API library
