@@ -5,23 +5,63 @@
             分數：{{ work.score}} / 
             評分者：{{ work.scorer }}
             尚未評分 <BR>     
-  <ul class="list-group">
-    <li class="list-group-item">
-      <h4 class="list-group-item-heading">心得感想</h4>
-      <div class="list-group-item-text">{{ work.memo|safe }}</div>
-    </li>
-    {% for work in contents %}
-    <li class="list-group-item material" id="m_{{ work.id }}">
-      {% spaceless %}
-        {% if work.content_type == 1 %}
-        <a href="{{work.content_link}}" target="_blank">{% if work.content_title %}{{work.content_title}}{% else %}開啟連結{% endif %}</a>
-        {% elif work.content_type == 2 %}
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/{{work.content_youtube|number}}?enablejsapi=1" frameborder="0" allowfullscreen></iframe>
-        {% elif work.content_type == 3 %}
-        <a href="/teacher/forum/download/{{work.id}}" target="_blank">{{work.content_title}}</a> 
-        {% endif %} 
-      {% endspaceless %}
-    </li>
-    {% endfor %}
-  </ul>
+  <div class="panel panel-default">
+    <div class="panel-heading">心得感想</div>
+    <div class="panel-body">{{ work.memo|safe }}</div>
+  </div>
+  <div id="vplayer"></div>
+{% endblock %}
+
+{% block footer_script %}
+<script>
+var vidMap = {
+  {% for work in contents %}
+  'm_{{ work.id }}': '{{ work.content_youtube|number }}',
+  {% endfor %}  
+};
+
+
+var vidPlayer = null;
+function onPlayerReady(event) {
+  event.target.playVideo();
+}
+function timeToSec(timestr) {
+  var hh = parseInt(timestr.substr(0, 2)), 
+      mm = parseInt(timestr.substr(3, 2)), 
+      ss = parseInt(timestr.substr(6, 2));
+    return (hh*3600)+(mm*60)+ss;
+}
+
+function onYouTubeIframeAPIReady() {
+  $('.btn-marker').click(function(event) {
+    var vid = vidMap['m_'+$(event.target).data('mid')];
+    var tsec = timeToSec($(event.target).data('time'));
+    if (!vidPlayer) {
+      vidPlayer = new YT.Player('vplayer', {
+        height: '315', 
+        width: '560', 
+        videoId: vid,
+        playerVars: {
+          start: tsec,
+        },
+        events: {
+          'onReady': onPlayerReady,
+        }
+      });
+    } else {
+      vidPlayer.loadVideoById(vid, tsec, 'large');
+      vidPlayer.play();
+    }
+  });
+}
+$(document).ready(function () {
+  //------------------------------------------------------------------------
+  // Load YouTube API library
+  var tag = document.createElement('script');
+  tag.id = 'iframe-demo';
+  tag.src = 'https://www.youtube.com/iframe_api';
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);  
+});
+</script>
 {% endblock %}

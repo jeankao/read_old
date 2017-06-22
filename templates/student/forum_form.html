@@ -40,7 +40,7 @@ function secToTime(sec) {
 function onYouTubeIframeAPIReady() {
   $('.material iframe[src*="www.youtube.com"]').each(function(index, element) {
       var materialID = $(element).parent().attr('id');
-      var playerID = `${materialID}_player`;
+      var playerID = materialID+'_player';
       var player;
       $(element).attr('id', playerID);
       player = new YT.Player(playerID);
@@ -64,16 +64,5 @@ $(document).ready(function () {
   var firstScriptTag = document.getElementsByTagName('script')[0];
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);  
 });
-/*
-$('#forum_form').submit(function(se) {
-  var memo = [];
-  $('.comment-body').each(function(index, element) {
-    var cid = parseInt($(element).parent().parent().attr('id').substr(1));
-    element.value = element.value.trim();
-    memo.push({id: cid, comment: element.value});
-  });
-  $('#memo').val(JSON.stringify(memo));
-});
-*/
 </script>
 {% endblock %}
