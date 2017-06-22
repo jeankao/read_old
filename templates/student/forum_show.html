@@ -13,11 +13,16 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-body">
-            <div id="vplayer"></div>
+            <div id="vplayer" class="embed-responsive-item"></div>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
+<style>
+.modal-content iframe {
+  max-width: 100%;
+}
+</style>
 {% endblock %}
 
 {% block footer_script %}
@@ -27,7 +32,6 @@ var vidMap = {
   'm_{{ work.id }}': '{{ work.content_youtube|number }}',
   {% endfor %}  
 };
-
 
 var vidPlayer = null;
 function onPlayerReady(event) {
@@ -46,10 +50,10 @@ function onYouTubeIframeAPIReady() {
     var tsec = timeToSec($(event.target).data('time'));
     if (!vidPlayer) {
       vidPlayer = new YT.Player('vplayer', {
-        height: '315', 
-        width: '560', 
         videoId: vid,
         playerVars: {
+          width: '560', 
+          height: '315',
           start: tsec,
         },
         events: {
